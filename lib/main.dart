@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:untitled/DetailClass.dart';
+import 'dart:convert';
+
+import 'package:untitled/Movie.dart';
+import 'package:untitled/MovieFeature.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,39 +36,72 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  var list = ["assets/fall.jpeg","assets/thor.jpg","assets/lostcity.jpg"];
-  var list2 = ["FALL","THOR","THE LOST CITY"];
+
+  List<MovieFeature> parseMovie(String cevap) {
+
+    return Movie.fromJson(json.decode(cevap)).movieList;
+}
+ Future<List<MovieFeature>> allMovie() async {
+
+    var uri = "https://api.themoviedb.org/3/movie/popular?api_key=bed61d549939767402884846d5325c72&page=1";
+    var url = Uri.parse(uri);
+    var cevap = await http.get(url);
+
+    return parseMovie(cevap.body);
+ }
+ @override
+  void initState() {
+
+    super.initState();
+    allMovie();
+  }
+
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Movie App :D'),),
+      appBar: AppBar(title: Text('Movie App'),
+      ),
+      body: FutureBuilder<List<MovieFeature>>(
+          future: allMovie(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              var movieList = snapshot.data;
+                return ListView.builder(
+                  itemCount: movieList?.length,
+                  itemBuilder: (context, index) {
+                    var movie = movieList![index];
+                    return  Center(
+                      child: Card(
+                          child:Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                GestureDetector(child: Image.network("https://image.tmdb.org/t/p/w342${movie.poster_path}"),
+                                 onTap:() {Navigator.push(context,MaterialPageRoute(builder: (context)=> DetailClass()));
+                                 },
+                                 ),
+                                GestureDetector(
+                                    child: Text(movie.title),
+                                    onTap:(){
+                                      Navigator.push(context,MaterialPageRoute(builder: (context) => DetailClass()));
 
-      body: ListView.builder(padding: const EdgeInsets.all(8.0),
-        itemCount: list.length,
-        itemBuilder: (BuildContext context,int index){
-        return GestureDetector(
-          onTap:(){
-            print("${list2[index]} tıklandı");
-            Navigator.push(context,
-              MaterialPageRoute(builder: (context) => DetailClass()),
-            );
-          },
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Image.asset(list[index]),
-                  Text(list2[index],style: const TextStyle(fontSize: 24,fontWeight: FontWeight.bold),),
-                ],
-              ),
-            ),
+                                    },
+                                )
+                              ],
+                            ),
+                          )
+                      ),
+                    );
+                  });
+            }
+            else{
 
-          ),
-        )
-        ;
-        },
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.black,),
+                );
+            }
+          }
       ),
     );
   }

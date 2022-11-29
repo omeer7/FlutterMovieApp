@@ -4,6 +4,7 @@ class DetailClass extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Movie Details Page'),),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
